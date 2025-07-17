@@ -9,8 +9,8 @@ const Page = () => {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
+    supabase.auth.getClaims().then(({ data }) => {
+      if (data?.claims) {
         router.replace("/info")
       } else {
         router.replace("/auth/login")
