@@ -10,6 +10,7 @@ export function LogoutButton() {
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // 退出登录后跳转到登录页面
     router.push("/auth/login");
   };
 
