@@ -1,18 +1,17 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "next/navigation";
 
 export function LogoutButton() {
+  const signOut = useAuthStore(state => state.signOut);
   const router = useRouter();
 
-  const logout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    // 退出登录后跳转到登录页面
+  const handleLogout = async () => {
+    await signOut();
     router.push("/auth/login");
   };
 
-  return <Button onClick={logout}>Logout</Button>;
+  return <Button onClick={handleLogout}>Logout</Button>;
 }

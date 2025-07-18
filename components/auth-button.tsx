@@ -2,36 +2,11 @@
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "./logout-button";
-import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
+import { useAuthStore } from "@/stores/auth";
 
 export function AuthButton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
-  useEffect(() => {
-    // 获取初始用户状态
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
-
-    getUser();
-
-    // 监听认证状态变化
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return <div className="flex items-center gap-4">Loading...</div>;
