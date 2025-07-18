@@ -1,35 +1,31 @@
 "use client";
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/stores/auth";
 
 type AuthGuardProps = { children: ReactNode };
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const { user, loading, initialized } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getClaims().then(({ data }) => {
-      if (data?.claims) setIsLoggedIn(true);
-      else setIsLoggedIn(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isLoggedIn === false) {
+    if (initialized && !loading && !user) {
       router.replace("/auth/login");
     }
-  }, [isLoggedIn, router]);
+  }, [initialized, loading, user, router]);
 
-  if (isLoggedIn === null) {
+  // 如果还在初始化或加载中，显示加载状态
+  if (!initialized || loading) {
     return <div className="flex items-center justify-center h-screen text-gray-500">加载中...</div>;
   }
-  if (!isLoggedIn) {
-    // 跳转时不渲染内容
+
+  // 如果未登录，不渲染内容（正在跳转）
+  if (!user) {
     return null;
   }
+
+  // 已登录，渲染子组件
   return <>{children}</>;
 };
 
