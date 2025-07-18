@@ -38,12 +38,26 @@ export default function EditCompanyPage() {
     }
   }, [companyId]);
 
-  const handleSubmit = async (data: UpdateCompanyData | any) => {
+  const handleSubmit = async (data: UpdateCompanyData | any, action: 'save' | 'submit') => {
     if (!company) return;
 
     try {
       setIsSubmitting(true);
-      await updateCompany(company.id, data);
+
+      // 根据操作类型设置状态
+      const updateData = {
+        ...data,
+        status: action === 'save' ? 'draft' : 'pending'
+      };
+
+      await updateCompany(company.id, updateData);
+
+      if (action === 'save') {
+        alert('草稿保存成功！');
+      } else {
+        alert('提交审核成功！请等待管理员审核。');
+      }
+
       router.push(`/companies/${company.id}`);
     } catch (error) {
       console.error('更新企业失败:', error);
@@ -63,7 +77,7 @@ export default function EditCompanyPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 w-full flex flex-col p-6">
         <div className="flex justify-center items-center min-h-[400px]">
           <Loading />
         </div>
@@ -73,7 +87,7 @@ export default function EditCompanyPage() {
 
   if (error || !company) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 w-full flex flex-col p-6">
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <p className="text-red-600">{error || '企业不存在'}</p>
@@ -89,7 +103,7 @@ export default function EditCompanyPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex-1 w-full flex flex-col p-6">
       <div className="mb-6">
         <Link href={`/companies/${company.id}`}>
           <Button variant="outline" className="mb-4">
@@ -98,7 +112,7 @@ export default function EditCompanyPage() {
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">编辑企业</h1>
         <p className="text-gray-600 mt-2">
-          修改企业 "{company.name}" 的信息
+          修改企业 "{company.name}" 的信息，您可以先保存草稿，完善后再提交审核
         </p>
       </div>
 

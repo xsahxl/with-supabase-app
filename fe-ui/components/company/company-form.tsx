@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Company, CreateCompanyData, UpdateCompanyData } from '@/lib/types/company';
+import { Company, CreateCompanyData, UpdateCompanyData, CompanyStatus } from '@/lib/types/company';
 
 interface CompanyFormProps {
   company?: Company;
-  onSubmit: (data: CreateCompanyData | UpdateCompanyData) => Promise<void>;
+  onSubmit: (data: CreateCompanyData | UpdateCompanyData, action: 'save' | 'submit') => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -24,6 +24,8 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
     website: company?.website || ''
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -31,7 +33,16 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSaveDraft = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData, 'save');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitForReview = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 验证必填字段
@@ -46,7 +57,12 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
       return;
     }
 
-    await onSubmit(formData);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData, 'submit');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValidUrl = (url: string) => {
@@ -58,6 +74,9 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
     }
   };
 
+  const isFormValid = formData.name.trim() &&
+    (!formData.website || isValidUrl(formData.website));
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -67,7 +86,7 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmitForReview} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">企业名称 *</Label>
             <Input
@@ -140,15 +159,23 @@ const CompanyForm = ({ company, onSubmit, onCancel, isLoading = false }: Company
               type="button"
               variant="outline"
               onClick={onCancel}
-              disabled={isLoading}
+              disabled={isLoading || isSubmitting}
             >
               取消
             </Button>
             <Button
-              type="submit"
-              disabled={isLoading}
+              type="button"
+              variant="secondary"
+              onClick={handleSaveDraft}
+              disabled={isLoading || isSubmitting}
             >
-              {isLoading ? '保存中...' : (company ? '更新' : '创建')}
+              {isSubmitting ? '保存中...' : '保存草稿'}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading || isSubmitting || !isFormValid}
+            >
+              {isSubmitting ? '提交中...' : '提交审核'}
             </Button>
           </div>
         </form>

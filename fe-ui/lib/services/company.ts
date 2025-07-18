@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/client';
-import { Company, CreateCompanyData, UpdateCompanyData, CompanyListParams } from '@/lib/types/company';
+import { Company, CreateCompanyData, UpdateCompanyData, CompanyListParams, CompanyStatus } from '@/lib/types/company';
 
 const supabase = createClient();
 
 // 获取企业列表
 export const getCompanies = async (params: CompanyListParams = {}) => {
-  const { page = 1, limit = 10, search, sort_by = 'created_at', sort_order = 'desc' } = params;
+  const { page = 1, limit = 10, search, status, sort_by = 'created_at', sort_order = 'desc' } = params;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -16,6 +16,11 @@ export const getCompanies = async (params: CompanyListParams = {}) => {
   // 添加搜索条件
   if (search) {
     query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+  }
+
+  // 添加状态过滤
+  if (status) {
+    query = query.eq('status', status);
   }
 
   // 添加排序
@@ -54,9 +59,15 @@ export const getCompanyById = async (id: string): Promise<Company> => {
 
 // 创建企业
 export const createCompany = async (companyData: CreateCompanyData): Promise<Company> => {
+  // 如果没有指定状态，默认为草稿
+  const dataToInsert = {
+    ...companyData,
+    status: companyData.status || 'draft'
+  };
+
   const { data, error } = await supabase
     .from('companies')
-    .insert(companyData)
+    .insert(dataToInsert)
     .select()
     .single();
 
@@ -78,6 +89,22 @@ export const updateCompany = async (id: string, companyData: UpdateCompanyData):
 
   if (error) {
     throw new Error(`更新企业失败: ${error.message}`);
+  }
+
+  return data as Company;
+};
+
+// 更新企业状态
+export const updateCompanyStatus = async (id: string, status: CompanyStatus): Promise<Company> => {
+  const { data, error } = await supabase
+    .from('companies')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`更新企业状态失败: ${error.message}`);
   }
 
   return data as Company;

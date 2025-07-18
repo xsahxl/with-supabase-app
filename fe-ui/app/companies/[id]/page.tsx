@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Loading from '@/components/ui/loading';
-import { getCompanyById, deleteCompany } from '@/lib/services/company';
-import { Company } from '@/lib/types/company';
+import StatusBadge from '@/components/ui/status-badge';
+import { getCompanyById, deleteCompany, updateCompanyStatus } from '@/lib/services/company';
+import { Company, CompanyStatus } from '@/lib/types/company';
 
 export default function CompanyDetailPage() {
   const params = useParams();
@@ -17,6 +18,7 @@ export default function CompanyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const companyId = params.id as string;
 
@@ -57,6 +59,34 @@ export default function CompanyDetailPage() {
     }
   };
 
+  const handleStatusUpdate = async (newStatus: CompanyStatus) => {
+    if (!company) return;
+
+    const statusLabels = {
+      draft: '草稿',
+      pending: '待审核',
+      approved: '审核通过',
+      rejected: '审核不通过',
+      archived: '已下架'
+    };
+
+    if (!confirm(`确定要将企业状态更改为"${statusLabels[newStatus]}"吗？`)) {
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      const updatedCompany = await updateCompanyStatus(company.id, newStatus);
+      setCompany(updatedCompany);
+      alert('状态更新成功！');
+    } catch (error) {
+      console.error('更新状态失败:', error);
+      alert(error instanceof Error ? error.message : '更新状态失败');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -69,7 +99,7 @@ export default function CompanyDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 w-full flex flex-col p-6">
         <div className="flex justify-center items-center min-h-[400px]">
           <Loading />
         </div>
@@ -79,7 +109,7 @@ export default function CompanyDetailPage() {
 
   if (error || !company) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 w-full flex flex-col p-6">
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <p className="text-red-600">{error || '企业不存在'}</p>
@@ -95,7 +125,7 @@ export default function CompanyDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex-1 w-full flex flex-col p-6">
       <div className="mb-6">
         <Link href="/companies">
           <Button variant="outline" className="mb-4">
@@ -106,9 +136,12 @@ export default function CompanyDetailPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{company.name}</h1>
-            <p className="text-gray-600 mt-2">
-              创建于 {formatDate(company.created_at)}
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <StatusBadge status={company.status} />
+              <p className="text-gray-600">
+                创建于 {formatDate(company.created_at)}
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-2">
@@ -196,6 +229,84 @@ export default function CompanyDetailPage() {
 
         {/* 侧边栏 */}
         <div className="space-y-6">
+          {/* 状态管理 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>状态管理</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-500">当前状态</p>
+                <div className="mt-1">
+                  <StatusBadge status={company.status} />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">状态更新时间</p>
+                <p className="font-medium">{formatDate(company.status_updated_at)}</p>
+              </div>
+
+              {/* 状态操作按钮 */}
+              <div className="space-y-2 pt-2">
+                {company.status === 'draft' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleStatusUpdate('pending')}
+                    disabled={updatingStatus}
+                  >
+                    提交审核
+                  </Button>
+                )}
+                {company.status === 'pending' && (
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleStatusUpdate('approved')}
+                      disabled={updatingStatus}
+                    >
+                      审核通过
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleStatusUpdate('rejected')}
+                      disabled={updatingStatus}
+                    >
+                      审核不通过
+                    </Button>
+                  </div>
+                )}
+                {company.status === 'approved' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleStatusUpdate('archived')}
+                    disabled={updatingStatus}
+                  >
+                    下架企业
+                  </Button>
+                )}
+                {(company.status === 'rejected' || company.status === 'archived') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleStatusUpdate('draft')}
+                    disabled={updatingStatus}
+                  >
+                    重新编辑
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* 时间信息 */}
           <Card>
             <CardHeader>

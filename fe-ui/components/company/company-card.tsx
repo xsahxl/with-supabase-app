@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import StatusBadge from '@/components/ui/status-badge';
 import { Company } from '@/lib/types/company';
 
 interface CompanyCardProps {
@@ -37,6 +38,7 @@ const CompanyCard = ({ company }: CompanyCardProps) => {
               </CardDescription>
             </div>
           </div>
+          <StatusBadge status={company.status} />
         </div>
       </CardHeader>
 
@@ -60,7 +62,10 @@ const CompanyCard = ({ company }: CompanyCardProps) => {
           )}
         </div>
 
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-between items-center pt-2">
+          <div className="text-xs text-gray-500">
+            状态更新: {formatDate(company.status_updated_at)}
+          </div>
           <Link
             href={`/companies/${company.id}`}
             className="text-sm text-blue-600 hover:text-blue-800 font-medium"

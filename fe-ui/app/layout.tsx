@@ -3,7 +3,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth-provider";
 import Link from "next/link";
-import Sidebar from "@/components/sidebar";
+import ConditionalSidebar from "@/components/conditional-sidebar";
 import { AuthButton } from "@/components/auth-button";
 import "./globals.css";
 
@@ -30,13 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <nav className="fixed top-0 w-full flex border-b border-b-foreground/10 h-16 bg-white z-30">
             <div className="w-full flex justify-between items-center p-3 px-5 text-sm">
-              <Link href="/" className="font-semibold">Next.js Supabase Starter</Link>
+              <Link href="/companies" className="font-semibold">Next.js Supabase Starter</Link>
               <AuthButton />
             </div>
           </nav>
           <div className="flex flex-1 pt-16">
-            <Sidebar />
-            <main className="flex-1 ml-64 min-h-screen bg-white">
+            <ConditionalSidebar />
+            <main className="flex-1 min-h-screen bg-white transition-all duration-300">
               <ThemeProvider
                 attribute="class"
                 defaultTheme="system"

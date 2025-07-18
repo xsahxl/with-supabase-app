@@ -12,7 +12,7 @@ const handleKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
 
 const Sidebar: FC = () => {
   const pathname = usePathname();
-  const isActive = pathname.startsWith('/companies');
+  const isCompaniesActive = pathname.startsWith('/companies');
 
   return (
     <nav
@@ -21,7 +21,7 @@ const Sidebar: FC = () => {
     >
       <Link
         href="/companies"
-        className={`block py-3 px-4 rounded-lg font-medium transition-colors duration-150 focus:outline-none ${isActive
+        className={`block py-3 px-4 rounded-lg font-medium transition-colors duration-150 focus:outline-none ${isCompaniesActive
           ? 'bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600'
           : 'text-gray-800 hover:bg-gray-200 focus:bg-gray-200'
           }`}

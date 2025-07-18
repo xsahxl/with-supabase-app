@@ -13,14 +13,28 @@ export default function CreateCompanyPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (data: CreateCompanyData | any) => {
+  const handleSubmit = async (data: CreateCompanyData | any, action: 'save' | 'submit') => {
     try {
       setIsLoading(true);
-      await createCompany(data);
-      router.push('/companies');
+
+      // 根据操作类型设置状态
+      const companyData = {
+        ...data,
+        status: action === 'save' ? 'draft' : 'pending'
+      };
+
+      await createCompany(companyData);
+
+      if (action === 'save') {
+        alert('草稿保存成功！');
+        router.push('/companies');
+      } else {
+        alert('提交审核成功！请等待管理员审核。');
+        router.push('/companies');
+      }
     } catch (error) {
-      console.error('创建企业失败:', error);
-      alert(error instanceof Error ? error.message : '创建企业失败');
+      console.error('操作失败:', error);
+      alert(error instanceof Error ? error.message : '操作失败');
     } finally {
       setIsLoading(false);
     }
@@ -31,7 +45,7 @@ export default function CreateCompanyPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex-1 w-full flex flex-col p-6">
       <div className="mb-6">
         <Link href="/companies">
           <Button variant="outline" className="mb-4">
@@ -40,7 +54,7 @@ export default function CreateCompanyPage() {
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">创建企业</h1>
         <p className="text-gray-600 mt-2">
-          添加新的企业信息到系统中
+          添加新的企业信息到系统中，您可以先保存草稿，完善后再提交审核
         </p>
       </div>
 
