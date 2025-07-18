@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import "./globals.css";
-import { AuthButton } from "@/components/auth-button";
 import { AuthProvider } from "@/components/auth-provider";
 import Link from "next/link";
+import Sidebar from "@/components/sidebar";
+import { AuthButton } from "@/components/auth-button";
+import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,29 +17,36 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const metadata: Metadata = {
+  metadataBase: new URL(defaultUrl),
+  title: "Next.js and Supabase Starter Kit",
+  description: "The fastest way to build apps with Next.js and Supabase",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body className={`${geistSans.className} antialiased flex flex-col`}>
         <AuthProvider>
-          <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-            <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
+          <nav className="fixed top-0 w-full flex border-b border-b-foreground/10 h-16 bg-white z-30">
+            <div className="w-full flex justify-between items-center p-3 px-5 text-sm">
               <Link href="/" className="font-semibold">Next.js Supabase Starter</Link>
               <AuthButton />
             </div>
           </nav>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <div className="flex flex-1 pt-16">
+            <Sidebar />
+            <main className="flex-1 ml-64 min-h-screen bg-white">
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </main>
+          </div>
         </AuthProvider>
       </body>
     </html>
